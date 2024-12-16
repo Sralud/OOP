@@ -8,16 +8,17 @@ public class WorkoutScheduler {
     private JPanel mainPanel, addTaskPanel, todoPanelList;
     private DefaultListModel<JCheckBox> todoListModel;
     private DefaultListModel<String> monthScheduleListModel;
+    private DefaultListModel<String> historyListModel;
+    private JList<String> historyList;
 
     public WorkoutScheduler() {
         // Initialize JFrame
         frame = new JFrame("Workout Scheduler");
-        frame.setSize(800, 500);
+        frame.setSize(1000, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
         // Main Panel
-        mainPanel = new JPanel(new GridLayout(1, 2));
         createMainView();
 
         frame.add(mainPanel, BorderLayout.CENTER);
@@ -25,13 +26,32 @@ public class WorkoutScheduler {
     }
 
     private void createMainView() {
-        // Left: "This Month's Schedule"
+        // Left: "This Month's Schedule" and "History"
+        JPanel leftPanel = new JPanel(new GridLayout(2, 1));
+
+        // Upper part: This Month's Schedule
         JPanel monthSchedulePanel = new JPanel(new BorderLayout());
         JLabel monthLabel = new JLabel("This Month's Schedule", SwingConstants.CENTER);
         monthScheduleListModel = new DefaultListModel<>();
         JList<String> monthScheduleList = new JList<>(monthScheduleListModel);
         monthSchedulePanel.add(monthLabel, BorderLayout.NORTH);
         monthSchedulePanel.add(new JScrollPane(monthScheduleList), BorderLayout.CENTER);
+
+        // Lower part: History
+        JPanel historyPanel = new JPanel(new BorderLayout());
+        JLabel historyLabel = new JLabel("History", SwingConstants.CENTER);
+        historyListModel = new DefaultListModel<>();
+        historyList = new JList<>(historyListModel);
+        historyPanel.add(historyLabel, BorderLayout.NORTH);
+        historyPanel.add(new JScrollPane(historyList), BorderLayout.CENTER);
+
+        // Add restore button for history items
+        JButton restoreButton = new JButton("Restore Selected");
+        restoreButton.addActionListener(e -> restoreSelectedTask());
+        historyPanel.add(restoreButton, BorderLayout.SOUTH);
+
+        leftPanel.add(monthSchedulePanel);
+        leftPanel.add(historyPanel);
 
         // Right: "To-do Workouts"
         JPanel todoPanel = new JPanel(new BorderLayout());
@@ -58,13 +78,14 @@ public class WorkoutScheduler {
 
         buttonsPanel.add(addTaskButton);
         buttonsPanel.add(editTaskButton);
-        buttonsPanel.add(viewTaskButton); // Added View Task Button
+        buttonsPanel.add(viewTaskButton);
         buttonsPanel.add(finishTaskButton);
 
         todoPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
-        // Add to Main Panel
-        mainPanel.add(monthSchedulePanel);
+        // Update main panel
+        mainPanel = new JPanel(new GridLayout(1, 2));
+        mainPanel.add(leftPanel);
         mainPanel.add(todoPanel);
     }
 
@@ -110,7 +131,7 @@ public class WorkoutScheduler {
         addTaskPanel.add(categoryLabel);
         addTaskPanel.add(categoryComboBox);
         addTaskPanel.add(setsRepsTimerLabel);
-        addTaskPanel.add(setsRepsTimerPanel); // Add horizontal layout
+        addTaskPanel.add(setsRepsTimerPanel);
         addTaskPanel.add(confirmButton);
         addTaskPanel.add(cancelButton);
 
@@ -210,21 +231,18 @@ public class WorkoutScheduler {
     }
 
     private void startWorkoutTimer(int minutes) {
-        int totalSeconds = minutes * 60; // Convert minutes to seconds
+        int totalSeconds = minutes * 60;
     
-        // Create a new JFrame for the timer
         JFrame timerFrame = new JFrame("Workout Timer");
         timerFrame.setSize(300, 150);
         timerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
     
-        // Create a JLabel to display the countdown time
         JLabel timerLabel = new JLabel("", SwingConstants.CENTER);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
         timerFrame.add(timerLabel, BorderLayout.CENTER);
     
         timerFrame.setVisible(true);
     
-        // Timer logic to update the countdown every second
         Timer timer = new Timer(1000, new ActionListener() {
             int secondsLeft = totalSeconds;
     
@@ -236,7 +254,7 @@ public class WorkoutScheduler {
                     timerLabel.setText(String.format("%02d:%02d", minutes, seconds));
                     secondsLeft--;
                 } else {
-                    ((Timer) e.getSource()).stop(); // Stop the timer when countdown finishes
+                    ((Timer) e.getSource()).stop();
                     timerLabel.setText("Workout Complete!");
                     JOptionPane.showMessageDialog(timerFrame, "Great job! Workout finished.", "Timer", JOptionPane.INFORMATION_MESSAGE);
                 }
@@ -260,11 +278,37 @@ public class WorkoutScheduler {
     private void finishSelectedTask() {
         ArrayList<JCheckBox> selectedTasks = getSelectedTasks();
         for (JCheckBox selectedTask : selectedTasks) {
+            String taskDetails = selectedTask.getText();
             todoListModel.removeElement(selectedTask);
             todoPanelList.remove(selectedTask);
+            monthScheduleListModel.removeElement(taskDetails);
+            
+            // Add the finished task to the history
+            historyListModel.addElement(taskDetails);
         }
         todoPanelList.revalidate();
         todoPanelList.repaint();
+    }
+
+    private void restoreSelectedTask() {
+        String selectedTask = historyList.getSelectedValue();
+        if (selectedTask != null) {
+            historyListModel.removeElement(selectedTask);
+            
+            // Add back to todo list
+            JCheckBox restoredTask = new JCheckBox(selectedTask);
+            todoListModel.addElement(restoredTask);
+            todoPanelList.add(restoredTask);
+            
+            // Update monthly schedule
+            monthScheduleListModel.addElement(selectedTask);
+            
+            // Refresh UI
+            todoPanelList.revalidate();
+            todoPanelList.repaint();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Please select a task to restore.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void switchToMainView() {
