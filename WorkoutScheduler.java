@@ -210,9 +210,41 @@ public class WorkoutScheduler {
     }
 
     private void startWorkoutTimer(int minutes) {
-        JOptionPane.showMessageDialog(frame, "Timer started for " + minutes + " minutes.");
-        // Actual timer implementation would go here...
-    }
+        int totalSeconds = minutes * 60; // Convert minutes to seconds
+    
+        // Create a new JFrame for the timer
+        JFrame timerFrame = new JFrame("Workout Timer");
+        timerFrame.setSize(300, 150);
+        timerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+    
+        // Create a JLabel to display the countdown time
+        JLabel timerLabel = new JLabel("", SwingConstants.CENTER);
+        timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        timerFrame.add(timerLabel, BorderLayout.CENTER);
+    
+        timerFrame.setVisible(true);
+    
+        // Timer logic to update the countdown every second
+        Timer timer = new Timer(1000, new ActionListener() {
+            int secondsLeft = totalSeconds;
+    
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (secondsLeft > 0) {
+                    int minutes = secondsLeft / 60;
+                    int seconds = secondsLeft % 60;
+                    timerLabel.setText(String.format("%02d:%02d", minutes, seconds));
+                    secondsLeft--;
+                } else {
+                    ((Timer) e.getSource()).stop(); // Stop the timer when countdown finishes
+                    timerLabel.setText("Workout Complete!");
+                    JOptionPane.showMessageDialog(timerFrame, "Great job! Workout finished.", "Timer", JOptionPane.INFORMATION_MESSAGE);
+                }
+            }
+        });
+    
+        timer.start();
+    }    
 
     private ArrayList<JCheckBox> getSelectedTasks() {
         ArrayList<JCheckBox> selectedTasks = new ArrayList<>();
