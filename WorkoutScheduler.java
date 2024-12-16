@@ -1,7 +1,7 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import javax.swing.*;
 
 public class WorkoutScheduler {
     private JFrame frame;
@@ -90,7 +90,7 @@ public class WorkoutScheduler {
     }
 
     private void switchToAddTaskView() {
-        addTaskPanel = new JPanel(new GridLayout(7, 2, 10, 10));
+        addTaskPanel = new JPanel(new GridLayout(8, 2, 10, 10)); // Increase rows to fit intensity
         addTaskPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
         JLabel nameLabel = new JLabel("Task Name:");
@@ -114,6 +114,35 @@ public class WorkoutScheduler {
         SpinnerNumberModel timerModel = new SpinnerNumberModel(1, 1, 120, 1);
         JSpinner timerSpinner = new JSpinner(timerModel);
 
+        // Add intensity selection
+        JLabel intensityLabel = new JLabel("Intensity:");
+        String[] intensities = {"Beginner", "Moderate", "Intense"};
+        JComboBox<String> intensityComboBox = new JComboBox<>(intensities);
+
+        // Create the intensity progress bar
+        JProgressBar intensityProgressBar = new JProgressBar(0, 100);
+        intensityProgressBar.setStringPainted(true);  // Show percentage text
+        intensityProgressBar.setForeground(Color.GREEN);  // Default to low intensity (green)
+
+        // Update progress bar color based on selected intensity
+        intensityComboBox.addActionListener(e -> {
+            String selectedIntensity = (String) intensityComboBox.getSelectedItem();
+            switch (selectedIntensity) {
+                case "Beginner":
+                    intensityProgressBar.setValue(33);
+                    intensityProgressBar.setForeground(Color.GREEN);
+                    break;
+                case "Moderate":
+                    intensityProgressBar.setValue(66);
+                    intensityProgressBar.setForeground(Color.YELLOW);
+                    break;
+                case "Intense":
+                    intensityProgressBar.setValue(100);
+                    intensityProgressBar.setForeground(Color.RED);
+                    break;
+            }
+        });
+
         setsRepsTimerPanel.add(setsSpinner);
         setsRepsTimerPanel.add(repsSpinner);
         setsRepsTimerPanel.add(timerSpinner);
@@ -121,8 +150,8 @@ public class WorkoutScheduler {
         JButton confirmButton = new JButton("Confirm");
         JButton cancelButton = new JButton("Cancel");
 
-        confirmButton.addActionListener(e -> addTask(nameField, descField, categoryComboBox, setsSpinner, repsSpinner, timerSpinner));
-        cancelButton.addActionListener(e -> switchToMainView());
+        confirmButton.addActionListener(e -> addTask(nameField, descField, categoryComboBox, setsSpinner, repsSpinner, timerSpinner, intensityComboBox));
+        cancelButton.addActionListener(e -> switchToAddTaskView());
 
         addTaskPanel.add(nameLabel);
         addTaskPanel.add(nameField);
@@ -132,6 +161,9 @@ public class WorkoutScheduler {
         addTaskPanel.add(categoryComboBox);
         addTaskPanel.add(setsRepsTimerLabel);
         addTaskPanel.add(setsRepsTimerPanel);
+        addTaskPanel.add(intensityLabel);
+        addTaskPanel.add(intensityComboBox);
+        addTaskPanel.add(intensityProgressBar);
         addTaskPanel.add(confirmButton);
         addTaskPanel.add(cancelButton);
 
@@ -142,17 +174,18 @@ public class WorkoutScheduler {
     }
 
     private void addTask(JTextField nameField, JTextField descField, JComboBox<String> categoryComboBox,
-                         JSpinner setsSpinner, JSpinner repsSpinner, JSpinner timerSpinner) {
+                         JSpinner setsSpinner, JSpinner repsSpinner, JSpinner timerSpinner, JComboBox<String> intensityComboBox) {
         String taskName = nameField.getText().trim();
         String taskDesc = descField.getText().trim();
         String taskCategory = categoryComboBox.getSelectedItem().toString();
         int sets = (int) setsSpinner.getValue();
         int reps = (int) repsSpinner.getValue();
         int timer = (int) timerSpinner.getValue();
+        String intensity = (String) intensityComboBox.getSelectedItem();
 
         if (!taskName.isEmpty()) {
             String taskDetails = taskName + " - " + taskDesc + " (" + taskCategory + ") | Sets: " + sets +
-                    ", Reps: " + reps + ", Timer: " + timer + " min";
+                    ", Reps: " + reps + ", Timer: " + timer + " min | Intensity: " + intensity;
 
             JCheckBox taskCheckBox = new JCheckBox(taskDetails);
             todoListModel.addElement(taskCheckBox);
@@ -163,7 +196,7 @@ public class WorkoutScheduler {
             todoPanelList.revalidate();
             todoPanelList.repaint();
 
-            switchToMainView();
+            switchToAddTaskView();
         } else {
             JOptionPane.showMessageDialog(frame, "Task name cannot be empty!", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -232,20 +265,20 @@ public class WorkoutScheduler {
 
     private void startWorkoutTimer(int minutes) {
         int totalSeconds = minutes * 60;
-    
+
         JFrame timerFrame = new JFrame("Workout Timer");
         timerFrame.setSize(300, 150);
         timerFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-    
+
         JLabel timerLabel = new JLabel("", SwingConstants.CENTER);
         timerLabel.setFont(new Font("Arial", Font.BOLD, 24));
         timerFrame.add(timerLabel, BorderLayout.CENTER);
-    
+
         timerFrame.setVisible(true);
-    
+
         Timer timer = new Timer(1000, new ActionListener() {
             int secondsLeft = totalSeconds;
-    
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (secondsLeft > 0) {
@@ -256,20 +289,22 @@ public class WorkoutScheduler {
                 } else {
                     ((Timer) e.getSource()).stop();
                     timerLabel.setText("Workout Complete!");
-                    JOptionPane.showMessageDialog(timerFrame, "Great job! Workout finished.", "Timer", JOptionPane.INFORMATION_MESSAGE);
+                    JOptionPane.showMessageDialog(timerFrame, "Great job! Workout finished.");
                 }
             }
         });
-    
+
         timer.start();
-    }    
+    }
 
     private ArrayList<JCheckBox> getSelectedTasks() {
         ArrayList<JCheckBox> selectedTasks = new ArrayList<>();
-        for (int i = 0; i < todoListModel.size(); i++) {
-            JCheckBox taskCheckBox = todoListModel.getElementAt(i);
-            if (taskCheckBox.isSelected()) {
-                selectedTasks.add(taskCheckBox);
+        for (Component comp : todoPanelList.getComponents()) {
+            if (comp instanceof JCheckBox) {
+                JCheckBox checkBox = (JCheckBox) comp;
+                if (checkBox.isSelected()) {
+                    selectedTasks.add(checkBox);
+                }
             }
         }
         return selectedTasks;
@@ -277,33 +312,29 @@ public class WorkoutScheduler {
 
     private void finishSelectedTask() {
         ArrayList<JCheckBox> selectedTasks = getSelectedTasks();
-        for (JCheckBox selectedTask : selectedTasks) {
-            String taskDetails = selectedTask.getText();
-            todoListModel.removeElement(selectedTask);
-            todoPanelList.remove(selectedTask);
-            monthScheduleListModel.removeElement(taskDetails);
-            
-            // Add the finished task to the history
-            historyListModel.addElement(taskDetails);
+        if (!selectedTasks.isEmpty()) {
+            for (JCheckBox task : selectedTasks) {
+                String taskText = task.getText();
+                monthScheduleListModel.removeElement(taskText);
+                historyListModel.addElement(taskText);
+                todoPanelList.remove(task);
+            }
+            todoPanelList.revalidate();
+            todoPanelList.repaint();
+        } else {
+            JOptionPane.showMessageDialog(frame, "Please select a task to finish.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        todoPanelList.revalidate();
-        todoPanelList.repaint();
     }
 
     private void restoreSelectedTask() {
-        String selectedTask = historyList.getSelectedValue();
-        if (selectedTask != null) {
-            historyListModel.removeElement(selectedTask);
-            
-            // Add back to todo list
-            JCheckBox restoredTask = new JCheckBox(selectedTask);
-            todoListModel.addElement(restoredTask);
-            todoPanelList.add(restoredTask);
-            
-            // Update monthly schedule
-            monthScheduleListModel.addElement(selectedTask);
-            
-            // Refresh UI
+        ArrayList<JCheckBox> selectedTasks = getSelectedTasks();
+        if (!selectedTasks.isEmpty()) {
+            for (JCheckBox task : selectedTasks) {
+                String taskText = task.getText();
+                historyListModel.removeElement(taskText);
+                monthScheduleListModel.addElement(taskText);
+                todoPanelList.add(task);
+            }
             todoPanelList.revalidate();
             todoPanelList.repaint();
         } else {
@@ -311,14 +342,7 @@ public class WorkoutScheduler {
         }
     }
 
-    private void switchToMainView() {
-        frame.getContentPane().removeAll();
-        frame.add(mainPanel, BorderLayout.CENTER);
-        frame.revalidate();
-        frame.repaint();
-    }
-
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(WorkoutScheduler::new);
+        new WorkoutScheduler();
     }
 }
