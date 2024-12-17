@@ -1,7 +1,8 @@
-import javax.swing.*;
+package src;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import javax.swing.*;
 
 public class WorkoutScheduler {
     private JFrame frame;
@@ -14,7 +15,6 @@ public class WorkoutScheduler {
     private JList<String> historyList;
     private JPanel todoPanelList;
     private double userBMI;
-//asda
 
 
     public WorkoutScheduler() {
@@ -28,6 +28,7 @@ public class WorkoutScheduler {
         frame.setVisible(true);
     }
 
+    //BMI Calculator Screen
     private void createBMIPanel() {
         bmiPanel = new JPanel(new GridBagLayout());
         bmiPanel.setBackground(new Color(0xE6E6FA)); // Light lavender background
@@ -83,6 +84,7 @@ public class WorkoutScheduler {
         bmiPanel.add(bmiCategoryLabel, gbc);
     }
 
+    //Segment to calculate BMI
     private void calculateBMI() {
         try {
             double height = Double.parseDouble(heightField.getText()) / 100; // convert cm to m
@@ -145,6 +147,7 @@ public class WorkoutScheduler {
         workoutPanel.add(addSelectedButton, BorderLayout.SOUTH);
     }
 
+    //Suggestions for weight class
     private ArrayList<String> getSuggestedWorkouts() {
         ArrayList<String> suggestions = new ArrayList<>();
         if (userBMI < 18.5) {
@@ -185,6 +188,7 @@ public class WorkoutScheduler {
         }
     }
 
+    //Main menu segment
     private void createMainView(ArrayList<String> selectedWorkouts) {
         todoListModel = new DefaultListModel<>();
         monthScheduleListModel = new DefaultListModel<>();
@@ -217,7 +221,7 @@ public class WorkoutScheduler {
         leftPanel.setBackground(new Color(0xd5b1c8));
 
         JPanel monthSchedulePanel = new JPanel(new BorderLayout());
-        JLabel monthLabel = new JLabel("This Month's Schedule", SwingConstants.CENTER);
+        JLabel monthLabel = new JLabel("Today's Schedule", SwingConstants.CENTER);
         JList<String> monthScheduleList = new JList<>(monthScheduleListModel);
         monthSchedulePanel.add(monthLabel, BorderLayout.NORTH);
         monthSchedulePanel.add(new JScrollPane(monthScheduleList), BorderLayout.CENTER);
@@ -240,6 +244,7 @@ public class WorkoutScheduler {
         return leftPanel;
     }
 
+    //Buttons for Tasks
     private JPanel createRightPanel() {
         JPanel rightPanel = new JPanel(new BorderLayout());
         JLabel todoLabel = new JLabel("To-do Workouts", SwingConstants.CENTER);
@@ -277,6 +282,7 @@ public class WorkoutScheduler {
         todoPanelList.repaint();
     }
 
+    //For Add Task Window
     private void switchToAddTaskView() {
         JPanel addTaskPanel = new JPanel(new GridLayout(7, 2, 10, 10));
         addTaskPanel.setBackground(new Color(0xd7e9e6));
@@ -346,6 +352,7 @@ public class WorkoutScheduler {
         }
     }
 
+    //Edit Task Window
     private void editSelectedTask() {
         ArrayList<JCheckBox> selectedTasks = getSelectedTasks();
         if (selectedTasks.size() == 1) {
@@ -379,6 +386,7 @@ public class WorkoutScheduler {
         }
     }
 
+    //Finish Task
     private void finishSelectedTask() {
         ArrayList<JCheckBox> selectedTasks = getSelectedTasks();
         for (JCheckBox selectedTask : selectedTasks) {
@@ -393,6 +401,7 @@ public class WorkoutScheduler {
         todoPanelList.repaint();
     }
 
+    //View Task and Timer
     private void viewSelectedTask() {
         ArrayList<JCheckBox> selectedTasks = getSelectedTasks();
         if (selectedTasks.size() == 1) {
