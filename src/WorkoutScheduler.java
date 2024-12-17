@@ -16,7 +16,6 @@ public class WorkoutScheduler {
     private JPanel todoPanelList;
     private double userBMI;
 
-
     public WorkoutScheduler() {
         frame = new JFrame("Workout Scheduler");
         frame.setSize(1000, 600);
