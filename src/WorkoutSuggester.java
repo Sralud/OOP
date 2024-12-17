@@ -21,7 +21,7 @@ public class WorkoutSuggester {
         panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(0xF0F8FF));
 
-        JLabel titleLabel = new JLabel("Suggested Workouts", SwingConstants.CENTER);
+        JLabel titleLabel = new JLabel("Suggested Indoor Workouts", SwingConstants.CENTER);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         panel.add(titleLabel, BorderLayout.NORTH);
 
@@ -45,21 +45,21 @@ public class WorkoutSuggester {
     private ArrayList<String> getSuggestedWorkouts(double bmi) {
         ArrayList<String> suggestions = new ArrayList<>();
         if (bmi < 18.5) {
-            suggestions.add("Strength Training: Bodyweight exercises (3 sets, 10 reps)");
-            suggestions.add("Protein-rich meal planning");
-            suggestions.add("Yoga for flexibility (30 minutes)");
+            suggestions.add("Bodyweight Squats (Sets: 3, Reps: 12, Timer: 10 mins)");
+            suggestions.add("Push-ups (Sets: 3, Reps: 10, Timer: 10 mins)");
+            suggestions.add("Indoor Yoga (Set: 1, Timer: 30 mins)");
         } else if (bmi < 25) {
-            suggestions.add("Cardio: Jogging (30 minutes)");
-            suggestions.add("Strength Training: Weightlifting (3 sets, 12 reps)");
-            suggestions.add("Swimming (45 minutes)");
+            suggestions.add("Jump Rope (Sets: 3, Reps: 2, Timer: 10 mins)");
+            suggestions.add("Dumbbell Rows (Sets: 3, Reps: 12, Timer: 15 mins)");
+            suggestions.add("Plank Hold (Sets: 3, Reps: 2, Timer: 5 mins)");
         } else if (bmi < 30) {
-            suggestions.add("High-Intensity Interval Training (HIIT) (20 minutes)");
-            suggestions.add("Strength Training: Circuit training (4 sets, 15 reps)");
-            suggestions.add("Cycling (45 minutes)");
+            suggestions.add("High Knees (Sets: 4, Reps: 2, Timer: 5 mins)");
+            suggestions.add("Indoor Cycling (Set: 1, Rep: 1, Timer: 30 mins)");
+            suggestions.add("Bodyweight Lunges (Sets: 3, Reps(per leg): 15, Timer: 15 mins)");
         } else {
-            suggestions.add("Walking (30 minutes)");
-            suggestions.add("Water Aerobics (45 minutes)");
-            suggestions.add("Light Strength Training (2 sets, 10 reps)");
+            suggestions.add("Seated Leg Raises (Sets: 3, Reps: 12, Timer: 10 mins)");
+            suggestions.add("Wall Push-ups (Sets: 3, Reps: 10, Timer: 10 mins)");
+            suggestions.add("Gentle Stretching (Set: 1, Rep: 1, Timer: 20 mins)");
         }
         return suggestions;
     }

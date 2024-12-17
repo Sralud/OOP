@@ -37,14 +37,21 @@ public class MainView {
         todoPanelList.setLayout(new BoxLayout(todoPanelList, BoxLayout.Y_AXIS));
         todoPanelList.setBackground(new Color(0xF5EFE7));
 
-        panel = new JPanel(new GridLayout(1, 2));
+        panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(0xd7e9e6));
 
+        JPanel contentPanel = new JPanel(new GridLayout(1, 2));
         JPanel leftPanel = createLeftPanel();
         JPanel rightPanel = createRightPanel();
 
-        panel.add(leftPanel);
-        panel.add(rightPanel);
+        contentPanel.add(leftPanel);
+        contentPanel.add(rightPanel);
+
+        panel.add(contentPanel, BorderLayout.CENTER);
+        
+        JButton returnToBMIButton = new JButton("Return to BMI Calculator");
+        returnToBMIButton.addActionListener(e -> scheduler.showBMICalculator());
+        panel.add(returnToBMIButton, BorderLayout.NORTH);
 
         for (String workout : selectedWorkouts) {
             addWorkoutToTodoList(workout);
@@ -195,7 +202,7 @@ public class MainView {
             JTextField descField = new JTextField();
             JSpinner setsSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
             JSpinner repsSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 50, 1));
-            JSpinner timerSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 120, 1));
+            JSpinner timerSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 1800, 1));
 
             Object[] editFields = {"Task Name:", nameField, "Description:", descField,
                     "Sets:", setsSpinner, "Reps:", repsSpinner, "Timer (min):", timerSpinner};
@@ -238,11 +245,13 @@ public class MainView {
             JCheckBox selectedTask = selectedTasks.get(0);
             String taskDetails = selectedTask.getText();
 
-            int timerValue = extractTimerFromTask(taskDetails);
+        // Extract timer value
+        int timerValue = extractTimerFromTask(taskDetails);
 
-            JOptionPane.showMessageDialog(scheduler.getFrame(), "Task Details:\n" + taskDetails, "View Task",
-                    JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(scheduler.getFrame(), "Task Details:\n" + taskDetails, "View Task",
+                JOptionPane.INFORMATION_MESSAGE);
 
+        if (timerValue > 0) {
             int startTimer = JOptionPane.showConfirmDialog(scheduler.getFrame(),
                     "Start Timer for " + timerValue + " minutes?", "Start Workout",
                     JOptionPane.YES_NO_OPTION);
@@ -250,14 +259,29 @@ public class MainView {
             if (startTimer == JOptionPane.YES_OPTION) {
                 startWorkoutTimer(timerValue);
             }
+        }
         } else {
             JOptionPane.showMessageDialog(scheduler.getFrame(), "Please select one task to view.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private int extractTimerFromTask(String taskDetails) {
-        String[] parts = taskDetails.split(", Timer:");
-        return Integer.parseInt(parts[1].trim().split(" ")[0]);
+        try {
+            String[] parts = taskDetails.split("Timer:");
+            if (parts.length > 1) {
+                return Integer.parseInt(parts[1].trim().split(" ")[0]);
+            }
+            // For suggested workouts format
+            parts = taskDetails.split(", ");
+            for (String part : parts) {
+                if (part.toLowerCase().contains("min")) {
+                    return Integer.parseInt(part.replaceAll("[^0-9]", ""));
+                }
+            }
+        } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+            // If we can't extract a timer value, return 0
+        }
+        return 0;
     }
 
     private void startWorkoutTimer(int minutes) {
