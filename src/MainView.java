@@ -1,7 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class MainView {
     private WorkoutScheduler scheduler;
@@ -11,9 +13,23 @@ public class MainView {
     private DefaultListModel<String> historyListModel;
     private JList<String> historyList;
     private JPanel todoPanelList;
+    private static final String HISTORY_FILE = "workout_history.ser";
+    private List<WorkoutTask> history;
 
     public MainView(WorkoutScheduler scheduler) {
         this.scheduler = scheduler;
+        this.history = new ArrayList<>();
+        initializeComponents();
+        loadHistory();
+    }
+
+    private void initializeComponents() {
+        todoListModel = new DefaultListModel<>();
+        monthScheduleListModel = new DefaultListModel<>();
+        historyListModel = new DefaultListModel<>();
+        historyList = new JList<>(historyListModel);
+        todoPanelList = new JPanel();
+        todoPanelList.setLayout(new BoxLayout(todoPanelList, BoxLayout.Y_AXIS));
     }
 
     public JPanel getPanel(ArrayList<String> selectedWorkouts) {
@@ -28,13 +44,6 @@ public class MainView {
     }
 
     private void createPanel(ArrayList<String> selectedWorkouts) {
-        todoListModel = new DefaultListModel<>();
-        monthScheduleListModel = new DefaultListModel<>();
-        historyListModel = new DefaultListModel<>();
-        todoPanelList = new JPanel();
-        todoPanelList.setLayout(new BoxLayout(todoPanelList, BoxLayout.Y_AXIS));
-        todoPanelList.setBackground(new Color(0xF5EFE7));
-
         panel = new JPanel(new BorderLayout());
         panel.setBackground(new Color(0xd7e9e6));
 
@@ -69,7 +78,6 @@ public class MainView {
 
         JPanel historyPanel = new JPanel(new BorderLayout());
         JLabel historyLabel = new JLabel("History", SwingConstants.CENTER);
-        historyList = new JList<>(historyListModel);
         historyPanel.add(historyLabel, BorderLayout.NORTH);
         historyPanel.add(new JScrollPane(historyList), BorderLayout.CENTER);
         historyPanel.setBackground(new Color(0xdfeaa6));
@@ -231,10 +239,13 @@ public class MainView {
             todoPanelList.remove(selectedTask);
             monthScheduleListModel.removeElement(taskDetails);
             
+            WorkoutTask task = new WorkoutTask(taskDetails);
+            history.add(task);
             historyListModel.addElement(taskDetails);
         }
         todoPanelList.revalidate();
         todoPanelList.repaint();
+        saveHistory();
     }
 
     private void viewSelectedTask() {
@@ -243,21 +254,20 @@ public class MainView {
             JCheckBox selectedTask = selectedTasks.get(0);
             String taskDetails = selectedTask.getText();
 
-        // Extract timer value
-        int timerValue = extractTimerFromTask(taskDetails);
+            int timerValue = extractTimerFromTask(taskDetails);
 
-        JOptionPane.showMessageDialog(scheduler.getFrame(), "Task Details:\n" + taskDetails, "View Task",
-                JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(scheduler.getFrame(), "Task Details:\n" + taskDetails, "View Task",
+                    JOptionPane.INFORMATION_MESSAGE);
 
-        if (timerValue > 0) {
-            int startTimer = JOptionPane.showConfirmDialog(scheduler.getFrame(),
-                    "Start Timer for " + timerValue + " minutes?", "Start Workout",
-                    JOptionPane.YES_NO_OPTION);
+            if (timerValue > 0) {
+                int startTimer = JOptionPane.showConfirmDialog(scheduler.getFrame(),
+                        "Start Timer for " + timerValue + " minutes?", "Start Workout",
+                        JOptionPane.YES_NO_OPTION);
 
-            if (startTimer == JOptionPane.YES_OPTION) {
-                startWorkoutTimer(timerValue);
+                if (startTimer == JOptionPane.YES_OPTION) {
+                    startWorkoutTimer(timerValue);
+                }
             }
-        }
         } else {
             JOptionPane.showMessageDialog(scheduler.getFrame(), "Please select one task to view.", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -269,7 +279,6 @@ public class MainView {
             if (parts.length > 1) {
                 return Integer.parseInt(parts[1].trim().split(" ")[0]);
             }
-            // For suggested workouts format
             parts = taskDetails.split(", ");
             for (String part : parts) {
                 if (part.toLowerCase().contains("min")) {
@@ -332,8 +341,38 @@ public class MainView {
         if (selectedTask != null) {
             historyListModel.removeElement(selectedTask);
             addWorkoutToTodoList(selectedTask);
+            history.removeIf(task -> task.getDetails().equals(selectedTask));
+            saveHistory();
         } else {
             JOptionPane.showMessageDialog(scheduler.getFrame(), "Please select a task to restore.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    public void saveHistory() {
+        if (history == null || history.isEmpty()) {
+            return;
+        }
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(HISTORY_FILE))) {
+            oos.writeObject(history);
+        } catch (IOException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(scheduler.getFrame(), "Error saving history", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void loadHistory() {
+        File file = new File(HISTORY_FILE);
+        if (file.exists()) {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+                history = (List<WorkoutTask>) ois.readObject();
+                for (WorkoutTask task : history) {
+                    historyListModel.addElement(task.getDetails());
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(scheduler.getFrame(), "Error loading history", "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 }

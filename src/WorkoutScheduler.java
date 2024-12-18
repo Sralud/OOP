@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
 public class WorkoutScheduler {
@@ -13,6 +15,13 @@ public class WorkoutScheduler {
         frame.setSize(1000, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
+
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                mainView.saveHistory();
+            }
+        });
 
         bmiCalculator = new BMICalculator(this);
         workoutSuggester = new WorkoutSuggester(this);
